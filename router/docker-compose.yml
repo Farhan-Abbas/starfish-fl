@@ -1,0 +1,41 @@
+version: '3.9'
+
+services:
+  starfish-router:
+    build:
+      context: .
+    image: starfish-router
+    container_name: starfishrouter
+    depends_on:
+      - postgres
+    ports:
+      - '8000:8000'
+    env_file:
+      - .env
+    environment:
+      - DATABASE_HOST=postgres
+    command: bash -c "cron && poetry run python3 manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - artifacts:/starfish/artifacts
+    networks:
+      - starfish-controller_default
+
+  postgres:
+    image: postgres:12.9
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: UCalgary123
+    networks:
+      - starfish-controller_default
+
+volumes:
+  postgres_data: {}
+  artifacts:  {}
+
+networks:
+  starfish-controller_default:
+    external: true

@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "starfish-router"
+version = "0.1.0"
+description = "A federated learning (FL) system that is friendly to users with diverse backgrounds, for instance, in healthcare."
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "starfish"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+django = "^4.2.3"
+djangorestframework = "^3.14.0"
+python-dotenv = "^1.0.0"
+psycopg2-binary = "^2.9.6"
+django-fsm = "^2.8.1"
+django-extensions = "^3.2.3"
+
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.4.1"
+autopep8 = "^2.0.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
