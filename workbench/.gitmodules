@@ -1,0 +1,8 @@
+[submodule "app/starfish-controller"]
+	path = app/starfish-controller
+	url = git@github.com:denoslab/starfish-controller.git
+	branch = main
+[submodule "app/starfish-router"]
+	path = app/starfish-router
+	url = git@github.com:denoslab/starfish-router.git
+	branch = main

@@ -1,0 +1,93 @@
+version: '3.9'
+
+services:
+  router:
+    build:
+      context: ../app/starfish-router
+    image: starfish-router
+    depends_on:
+      - postgres
+    ports:
+      - '8000:8000'
+    env_file:
+      - ../config/router.env
+    command: bash -c "cron && poetry run python3 manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - router_artifacts:/starfish/artifacts
+
+  controller:
+    build:
+      context: ../app/starfish-controller
+    image: starfish-controller
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - '8001:8000'
+    env_file:
+      - ../config/controller.env
+    volumes:
+      - controller_artifacts:/starfish-controller/local
+
+  controller-scheduler:
+    build:
+      context: ../app/starfish-controller
+    image: starfish-controller
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../config/controller.env
+    entrypoint: ["poetry", "run", "celery", "-A", "starfish", "beat", "-l", "DEBUG"]
+    volumes:
+      - controller_artifacts:/starfish-controller/local
+
+  controller-run-worker:
+    build:
+      context: ../app/starfish-controller
+    image: starfish-controller
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../config/controller.env
+    entrypoint: ["poetry", "run", "celery", "-A", "starfish", "worker", "-l", "DEBUG", "-Q", "starfish.run"]
+    volumes:
+      - controller_artifacts:/starfish-controller/local
+
+  controller-processor-worker:
+    build:
+      context: ../app/starfish-controller
+    image: starfish-controller
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../config/controller.env
+    entrypoint: ["poetry", "run", "celery", "-A", "starfish", "worker", "-l", "DEBUG", "--concurrency=1", "-Q", "starfish.processor"]
+    volumes:
+      - controller_artifacts:/starfish-controller/local
+
+
+  redis:
+    image: redis:5.0
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/opt/redis/data
+
+  postgres:
+    image: postgres:12.9
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: UCalgary123
+
+volumes:
+  postgres_data: {}
+  router_artifacts: {}
+  controller_artifacts: {}
+  redis_data: {}
