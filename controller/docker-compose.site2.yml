@@ -1,0 +1,79 @@
+version: '3.9'
+
+services:
+  starfish-controller-site2:
+    container_name: starfish-controller-site2
+    build:
+      context: .
+    image: starfish-controller
+    depends_on:
+      - controller-scheduler-site2
+      - controller-run-worker-site2
+      - controller-processor-worker-site2
+      - redis-site2
+    ports:
+      - '8002:8000'
+    env_file:
+      - .env.site2
+    command: bash -c "cron && python3 manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - artifacts-site2:/starfish-controller/local
+      - ./starfish:/app/starfish
+      - ./manage.py:/app/manage.py
+
+  controller-scheduler-site2:
+    container_name: starfish-controller-scheduler-site2
+    build:
+      context: .
+    image: starfish-controller
+    depends_on:
+      - redis-site2
+    env_file:
+      - .env.site2
+    entrypoint: [ "celery", "-A", "starfish", "beat", "-l", "DEBUG" ]
+    volumes:
+      - artifacts-site2:/starfish-controller/local
+      - ./starfish:/app/starfish
+
+  controller-run-worker-site2:
+    container_name: starfish-controller-run-worker-site2
+    build:
+      context: .
+    image: starfish-controller
+    depends_on:
+      - redis-site2
+    env_file:
+      - .env.site2
+    entrypoint: [ "celery", "-A", "starfish", "worker", "-l", "DEBUG", "-Q", "starfish.run" ]
+    volumes:
+      - artifacts-site2:/starfish-controller/local
+      - ./starfish:/app/starfish
+
+  controller-processor-worker-site2:
+    container_name: starfish-controller-processor-worker-site2
+    build:
+      context: .
+    image: starfish-controller
+    depends_on:
+      - redis-site2
+    env_file:
+      - .env.site2
+    entrypoint: [ "celery", "-A", "starfish", "worker", "-l", "DEBUG", "--concurrency=1", "-Q", "starfish.processor" ]
+    volumes:
+      - artifacts-site2:/starfish-controller/local
+      - ./starfish:/app/starfish
+
+  redis-site2:
+    image: redis:5.0
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data_site2:/opt/redis/data
+
+volumes:
+  artifacts-site2: {}
+  redis_data_site2: {}
+
+networks:
+  default:
+    name: starfish-network
