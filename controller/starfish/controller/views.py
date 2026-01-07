@@ -264,6 +264,23 @@ def project_detail(request, project_id, site_id):
                                  auth=(router_username, router_password))
     if runs_response.ok:
         all_runs = runs_response.json()
+    
+    # Check if there are any active runs (not Completed or Failed)
+    has_active_runs = False
+    active_statuses = ['Preparing', 'Running', 'Pending Aggregating', 'Pending Success', 'Pending Failed', 'Aggregating']
+    current_run = all_runs[-1] if all_runs else None
+    if current_run:
+        status = current_run.get('status')
+        cur_seq = current_run.get('cur_seq')
+        cur_round = current_run.get('tasks')[0].get('config').get('current_round')
+        if status in active_statuses:
+            has_active_runs = True
+        elif status == 'Standby':
+            # Include ALL other Standby states (between tasks/rounds)
+            # Exclude only the very first Standby (waiting for dataset upload)
+            if not (cur_seq == 1 and cur_round == 1):
+                has_active_runs = True                    
+    
     # render template
     template = loader.get_template(
         "controller/project_detail.html")
@@ -273,7 +290,8 @@ def project_detail(request, project_id, site_id):
         "participants": all_participants,
         "runs": all_runs,
         "site_id": site_id,
-        "can_start_runs": can_start_runs
+        "can_start_runs": can_start_runs,
+        "has_active_runs": has_active_runs
     }
     return HttpResponse(template.render(context, request))
 

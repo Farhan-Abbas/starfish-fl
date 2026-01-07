@@ -136,7 +136,7 @@ class LogisticRegression(AbstractTask):
             "metric_auc": auc,
             "metric_sensitivity": sensitivity,
             "metric_specificity": specificity,
-            "mertic_npv": npv,
+            "metric_npv": npv,
             "metric_ppv": ppv
         }
 

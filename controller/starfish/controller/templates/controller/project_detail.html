@@ -36,6 +36,19 @@
 {% block content %}
     <body>
     <script>
+        // Auto-refresh when runs are in progress
+        $(document).ready(function() {
+            // Check if there are any active runs (not Completed or Failed)
+            const hasActiveRuns = {{ has_active_runs|default:"false"|lower }};
+            
+            if (hasActiveRuns) {
+                // Refresh every 5 seconds when training is active
+                setTimeout(function() {
+                    location.reload();
+                }, 5000);
+            }
+        });
+        
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {

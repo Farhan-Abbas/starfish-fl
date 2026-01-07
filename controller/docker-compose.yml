@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   starfish-controller:
+    container_name: starfish-controller
     build:
       context: .
     image: starfish-controller
@@ -19,6 +20,7 @@ services:
       - artifacts:/starfish-controller/local
 
   controller-scheduler:
+    container_name: starfish-controller-scheduler
     build:
       context: .
     image: starfish-controller
@@ -31,6 +33,7 @@ services:
       - artifacts:/starfish-controller/local
 
   controller-run-worker:
+    container_name: starfish-controller-run-worker
     build:
       context: .
     image: starfish-controller
@@ -43,6 +46,7 @@ services:
       - artifacts:/starfish-controller/local
 
   controller-processor-worker:
+    container_name: starfish-controller-processor-worker
     build:
       context: .
     image: starfish-controller
@@ -65,3 +69,7 @@ services:
 volumes:
   artifacts: {}
   redis_data: {}
+
+networks:
+  default:
+    name: starfish-network

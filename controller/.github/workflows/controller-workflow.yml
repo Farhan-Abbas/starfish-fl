@@ -1,0 +1,88 @@
+name: Starfish Controller Workflow
+
+on:
+  push:
+  pull_request:
+    branches: ["main", "development"]
+
+jobs:
+  setup-and-run-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Create .env file for testing
+      run: |
+        cat > .env << EOF
+        SITE_UID=test-site-uid-for-ci-cd
+        ROUTER_URL=http://localhost:8000/starfish/api/v1
+        ROUTER_USERNAME=admin
+        ROUTER_PASSWORD=test-password-123
+        CELERY_BROKER_URL=redis://redis:6379
+        CELERY_RESULT_BACKEND=redis://redis:6379
+        REDIS_HOST=redis
+        REDIS_PORT=6379
+        REDIS_DB=0
+        EOF
+    
+    - name: Build images
+      run: docker compose build
+    
+    - name: Start services
+      run: docker compose up -d
+    
+    - name: Wait for Redis to be ready
+      run: |
+        echo "Waiting for Redis to be ready..."
+        for i in {1..30}; do
+          if docker exec starfish-controller redis-cli -h redis ping | grep -q PONG; then
+            echo "Redis is ready!"
+            break
+          fi
+          echo "Attempt $i: Redis not ready yet..."
+          sleep 2
+        done
+    
+    - name: Run migrations
+      run: |
+        docker exec starfish-controller poetry run python3 manage.py migrate --noinput
+    
+    - name: Run Django tests
+      run: |
+        docker exec starfish-controller poetry run python3 manage.py test
+    
+    - name: Wait for application to be ready
+      run: |
+        echo "Waiting for application to respond..."
+        for i in {1..60}; do
+          if curl -f http://localhost:8001/ 2>/dev/null; then
+            echo "Application is ready!"
+            break
+          fi
+          echo "Attempt $i: Application not ready yet..."
+          sleep 2
+        done
+    
+    - name: Test web interface endpoint
+      run: |
+        curl -f http://localhost:8001/ || exit 1
+    
+    - name: Show logs on failure
+      if: failure()
+      run: docker compose logs
+    
+    - name: Cleanup
+      if: always()
+      run: docker compose down -v
+
+  docker-publish:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [setup-and-run-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and publish docker image for ${{ github.repository }}
+        uses: macbre/push-to-ghcr@master
+        with:
+          image_name: ${{ github.repository }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
