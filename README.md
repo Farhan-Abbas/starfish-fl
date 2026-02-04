@@ -91,7 +91,7 @@ The Controller component is installed on each site participating in federated le
 **Key Features:**
 - Web-based user interface for project management
 - Local model training and dataset management
-- Support for multiple ML tasks (Logistic Regression, Linear Regression, SVM, ANCOVA)
+- Support for multiple ML tasks (Logistic Regression, Linear Regression, SVM, ANCOVA, Ordinal Logistic Regression, Mixed Effects Logistic Regression)
 - Real-time progress monitoring
 - Celery-based distributed task processing
 
@@ -219,6 +219,8 @@ Router:
 - **Linear Regression**: Continuous value prediction
 - **SVM Regression**: Support Vector Machine regression
 - **ANCOVA**: Analysis of Covariance for statistical analysis
+- **Ordinal Logistic Regression**: Proportional odds model for ordered categorical outcomes
+- **Mixed Effects Logistic Regression**: Multilevel logistic regression for clustered/hierarchical binary data
 
 See [TASK_GUIDE.md](controller/TASK_GUIDE.md) for configuration details.
 
