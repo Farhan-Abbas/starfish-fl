@@ -125,6 +125,67 @@ Minimum 30 samples required.
 - Partial eta-squared (effect size)
 - Adjusted group means
 
+### Ordinal Logistic Regression
+
+**Description:** Proportional Odds Model for ordered categorical outcomes (e.g., "Low", "Medium", "High")
+
+**Use Case:** When your outcome has natural ordering but isn't continuous (e.g., disease severity levels, satisfaction ratings 1-5, education levels)
+
+**File Location:** `starfish/controller/tasks/stats_models/ordinal_logistic_regression.py`
+
+**Dataset Requirements:** CSV with:
+- First N-1 columns: predictor variables (continuous or dummy-encoded)
+- Last column: ordinal outcome variable (integer-coded: 0, 1, 2, ..., K-1)
+
+Minimum 30 samples required. Minimum 3 categories required.
+
+**Statistical Outputs:**
+- Coefficients (Log-Odds) with standard errors, p-values, confidence intervals
+- Threshold/Cut-point parameters (K-1 thresholds for K categories)
+- Odds Ratios (exponentiated coefficients)
+- Pseudo R-squared (McFadden's)
+- AIC/BIC for model comparison
+
+### Mixed Effects Logistic Regression
+
+**Description:** Multilevel/hierarchical logistic regression for clustered binary data with random intercepts
+
+**Use Case:** When observations are grouped/nested within clusters (e.g., patients within hospitals, students within schools, repeated measures within subjects)
+
+**File Location:** `starfish/controller/tasks/stats_models/mixed_effects_logistic_regression.py`
+
+**Dataset Requirements:** CSV with:
+- First column: group/cluster identifier (e.g., hospital_id, site_id)
+- Middle columns: predictor variables (continuous or dummy-encoded)
+- Last column: binary outcome variable (0 or 1)
+
+Minimum 30 samples required. Minimum 5 groups recommended.
+
+**Configuration Options:**
+```json
+{
+  "seq": 1,
+  "model": "MixedEffectsLogisticRegression",
+  "config": {
+    "total_round": 1,
+    "current_round": 1,
+    "vcp_p": 1.0,
+    "fe_p": 2.0
+  }
+}
+```
+
+- `vcp_p`: Prior standard deviation for variance component (default: 1.0)
+- `fe_p`: Prior standard deviation for fixed effects (default: 2.0)
+
+**Statistical Outputs:**
+- Fixed Effects: Coefficients (Log-Odds), standard errors, p-values, confidence intervals
+- Odds Ratios with confidence intervals
+- Random Effects: Variance components, group-specific intercepts
+- ICC (Intraclass Correlation Coefficient) - proportion of variance due to groups
+
+**Example Dataset:** `examples/mixed_effects_logistic_sample.csv`
+
 ## Configuration Parameters Explained
 
 ### Required Parameters
@@ -137,7 +198,9 @@ Minimum 30 samples required.
 - **local_epochs**: Number of epochs each site trains locally (default: 1 in code)
 - **test_size**: Proportion of data used for testing (default: 0.2 in code)
 - **learning_rate**: Learning rate for training (if applicable)
-- **n_group_columns**: (Ancova only) Number of columns representing group membership
+- **n_group_columns**: (ANCOVA only) Number of columns representing group membership
+- **vcp_p**: (Mixed Effects Logistic Regression only) Prior SD for variance components (default: 1.0)
+- **fe_p**: (Mixed Effects Logistic Regression only) Prior SD for fixed effects (default: 2.0)
 - **description**: Optional description of what this task does
 
 ## Step-by-Step: Creating a Project
