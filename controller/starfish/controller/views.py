@@ -251,14 +251,18 @@ def project_detail(request, project_id, site_id):
     can_start_runs = False
     if project_response.ok:
         current_project = project_response.json()
+        
+        # Get participants for everyone to see
+        participants_response = requests.get(
+            '{0}/project-participants/lookup/?project={1}'.format(
+                router_url, project_id),
+            auth=(router_username, router_password))
+        if participants_response.ok:
+            all_participants = participants_response.json()
+            
+        # Only the owner site can start runs
         if site_id == current_project["site"]:
-            participants_response = requests.get(
-                '{0}/project-participants/lookup/?project={1}'.format(
-                    router_url, project_id),
-                auth=(router_username, router_password))
-            if participants_response.ok:
-                all_participants = participants_response.json()
-                can_start_runs = True
+            can_start_runs = True
 
     runs_response = requests.get('{0}/runs/lookup/?project={1}&site_uid={2}'.format(router_url, project_id, site_uid),
                                  auth=(router_username, router_password))
@@ -441,3 +445,41 @@ def fetch_logs(request):
 
     return JsonResponse(
         {'success': False, 'msg': msg})
+
+
+def approve_participant(request, project_id):
+    if request.method == "POST":
+        participant_id = request.POST.get('participant_id')
+        response = requests.post(
+            '{0}/project-participants/{1}/approve/'.format(router_url, participant_id),
+            auth=(router_username, router_password)
+        )
+        if response.ok:
+            logger.info("Participant %s approved", participant_id)
+        else:
+            logger.error("Failed to approve participant: %s", response.text)
+
+    # Need real site_id for redirect
+    res = requests.get('{0}/sites/lookup/?uid={1}'.format(router_url, site_uid),
+                       auth=(router_username, router_password))
+    site_id = res.json().get('id', 0) if res.ok else 0
+    return redirect("/controller/projects/{0}/{1}/".format(project_id, site_id))
+
+
+def reject_participant(request, project_id):
+    if request.method == "POST":
+        participant_id = request.POST.get('participant_id')
+        response = requests.post(
+            '{0}/project-participants/{1}/reject/'.format(router_url, participant_id),
+            auth=(router_username, router_password)
+        )
+        if response.ok:
+            logger.info("Participant %s rejected", participant_id)
+        else:
+            logger.error("Failed to reject participant: %s", response.text)
+
+    # Need real site_id for redirect
+    res = requests.get('{0}/sites/lookup/?uid={1}'.format(router_url, site_uid),
+                       auth=(router_username, router_password))
+    site_id = res.json().get('id', 0) if res.ok else 0
+    return redirect("/controller/projects/{0}/{1}/".format(project_id, site_id))

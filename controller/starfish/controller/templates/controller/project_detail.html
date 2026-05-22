@@ -144,7 +144,9 @@
                 <th>Site ID</th>
                 <th>Role</th>
                 <th>Status</th>
+                <th>Approval</th>
                 <th>Progress</th>
+                <th>Actions</th>
                 </thead>
                 <tbody>
 
@@ -153,7 +155,32 @@
                         <td>{{ pp.site.id }}</td>
                         <td>{{ pp.role }}</td>
                         <td>{{ pp.site.status }}</td>
+                        <td>
+                            <span class="badge {% if pp.approval_status == 'approved' %}bg-success{% elif pp.approval_status == 'pending' %}bg-warning text-dark{% elif pp.approval_status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {% if pp.role == 'coordinator' %}
+                                    coordinator
+                                {% else %}
+                                    {{ pp.approval_status }}
+                                {% endif %}
+                            </span>
+                        </td>
                         <td>{{ pp.site|site_duration }}</td>
+                        <td>
+                            {% if can_start_runs and pp.approval_status == 'pending' and pp.role != 'coordinator' %}
+                                <div class="btn-group btn-group-sm">
+                                    <form action="{% url 'approve_participant' project_id=project_id %}" method="POST" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="participant_id" value="{{ pp.id }}">
+                                        <button type="submit" class="btn btn-outline-success">Approve</button>
+                                    </form>
+                                    <form action="{% url 'reject_participant' project_id=project_id %}" method="POST" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="participant_id" value="{{ pp.id }}">
+                                        <button type="submit" class="btn btn-outline-danger">Reject</button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
                 <tbody>

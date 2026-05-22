@@ -138,6 +138,7 @@ class ProjectParticipantSerializer(serializers.ModelSerializer):
     site = SiteSerializer(many=False)
     project = ProjectSerializer(many=False)
     role = serializers.CharField(source='get_role_display')
+    approval_status = serializers.CharField(source='get_approval_status_display', read_only=True)
     notes = serializers.CharField(style={'base_template': 'textarea.html'})
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
@@ -158,7 +159,7 @@ class ProjectParticipantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectParticipant
-        fields = ['id', 'site', 'project', 'role',
+        fields = ['id', 'site', 'project', 'role', 'approval_status',
                   'notes', 'created_at', 'updated_at']
         create_only_fields = ('site', 'project', 'role')
 

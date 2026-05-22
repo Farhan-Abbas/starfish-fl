@@ -16,4 +16,6 @@ urlpatterns = [
          views.perform_run_action),
     path("runs/fetch_logs/",
          views.fetch_logs),
+    path("projects/<int:project_id>/approve/", views.approve_participant, name="approve_participant"),
+    path("projects/<int:project_id>/reject/", views.reject_participant, name="reject_participant"),
 ]

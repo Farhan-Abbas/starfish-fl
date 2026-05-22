@@ -80,12 +80,22 @@ class ProjectParticipant(models.Model):
         COORDINATOR = "CO", _("coordinator")
         PARTICIPANT = "PA", _("participant")
 
+    class ApprovalStatus(models.TextChoices):
+        PENDING = "PE", _("pending")
+        APPROVED = "AP", _("approved")
+        REJECTED = "RE", _("rejected")
+
     site = models.ForeignKey(Site, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     role = models.CharField(
         max_length=2,
         choices=Role.choices,
         default=Role.PARTICIPANT,
+    )
+    approval_status = models.CharField(
+        max_length=2,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.PENDING,
     )
     notes = models.TextField()
     created_at = models.DateTimeField(editable=False)
@@ -96,6 +106,9 @@ class ProjectParticipant(models.Model):
         curr_time = timezone.now()
         if not self.id:
             self.created_at = curr_time
+            # If coordinator, approve automatically
+            if self.role == self.Role.COORDINATOR:
+                self.approval_status = self.ApprovalStatus.APPROVED
         self.updated_at = curr_time
         return super(ProjectParticipant, self).save(*args, **kwargs)
 

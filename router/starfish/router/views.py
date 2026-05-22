@@ -186,6 +186,26 @@ class ProjectParticipantViewSet(viewsets.ModelViewSet):
             queryset, many=True).data
         return Response(participants_data)
 
+    @action(detail=True, methods=['POST'], url_path='approve')
+    def approve(self, request, pk=None):
+        """
+        Approve a participant request.
+        """
+        participant = self.get_object()
+        participant.approval_status = ProjectParticipant.ApprovalStatus.APPROVED
+        participant.save()
+        return Response({'status': 'approved'})
+
+    @action(detail=True, methods=['POST'], url_path='reject')
+    def reject(self, request, pk=None):
+        """
+        Reject a participant request.
+        """
+        participant = self.get_object()
+        participant.approval_status = ProjectParticipant.ApprovalStatus.REJECTED
+        participant.save()
+        return Response({'status': 'rejected'})
+
 
 class RunViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
@@ -362,7 +382,7 @@ class BulkCreateRunAPIView(generics.ListCreateAPIView):
             records_to_create = []
             pps = ProjectParticipant.objects.filter(project=project_id)
             for pp in pps:
-                if pp.site.status == 1:
+                if pp.site.status == 1 and pp.approval_status == ProjectParticipant.ApprovalStatus.APPROVED:
                     data = {
                         "project": project,
                         "participant": pp,
@@ -376,7 +396,11 @@ class BulkCreateRunAPIView(generics.ListCreateAPIView):
                         "updated_at": curr_time
                     }
                     records_to_create.append(data)
-            if len(records_to_create) == len(pps):
+            
+            # Count only approved and connected participants
+            approved_connected_pps = [pp for pp in pps if pp.site.status == 1 and pp.approval_status == ProjectParticipant.ApprovalStatus.APPROVED]
+            
+            if len(records_to_create) == len(approved_connected_pps) and len(records_to_create) > 0:
                 created_records = Run.objects.bulk_create(
                     [Run(**item) for item in records_to_create], batch_size=100)
                 if created_records:
