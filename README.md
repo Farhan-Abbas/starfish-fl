@@ -11,6 +11,8 @@
 [![R 4.x](https://img.shields.io/badge/R-4.x-276DC3.svg)](https://www.r-project.org/)
 [![Django](https://img.shields.io/badge/Django-4.2-green.svg)](https://www.djangoproject.com/)
 [![Docker](https://img.shields.io/badge/Docker-ready-blue.svg)](https://www.docker.com/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20388960.svg)](DOI)
+
 
 📖 **[Full API documentation](https://denoslab.github.io/starfish-fl/)**
 
